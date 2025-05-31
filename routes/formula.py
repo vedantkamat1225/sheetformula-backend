@@ -1,16 +1,37 @@
-from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
-from services.openai_service import generate_formula_from_prompt
+from fastapi import APIRouter, Request, HTTPException
+from services.pocketbase_client import get_user
+from services.usage_tracker import increment_usage
+from services.openai_service import generate_formula, explain_formula
 
 router = APIRouter()
 
-class FormulaRequest(BaseModel):
-    prompt: str
+@router.post("/formula/generate")
+async def generate_formula_endpoint(request: Request):
+    data = await request.json()
+    prompt = data.get("prompt")
+    
+    # ✅ Extract and validate user from JWT
+    user = await get_user(request)
+    
+    # ✅ Track usage
+    await increment_usage(user['record']['id'])
 
-@router.post("/generate")
-async def generate_formula(req: FormulaRequest):
-    try:
-        formula = generate_formula_from_prompt(req.prompt)
-        return {"formula": formula}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    # ✅ Generate formula
+    formula = await generate_formula(prompt)
+    return {"formula": formula}
+
+
+@router.post("/formula/explain")
+async def explain_formula_endpoint(request: Request):
+    data = await request.json()
+    formula = data.get("formula")
+
+    # ✅ Extract and validate user from JWT
+    user = await get_user(request)
+
+    # ✅ Track usage
+    await increment_usage(user['record']['id'])
+
+    # ✅ Explain formula
+    explanation = await explain_formula(formula)
+    return {"explanation": explanation}
