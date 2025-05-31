@@ -1,23 +1,24 @@
-import openai
 import os
+import openai
 from dotenv import load_dotenv
-load_dotenv()
 
+load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-async def generate_formula(prompt: str) -> str:
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": f"Convert to Excel formula: {prompt}"}],
-        temperature=0.2
+def generate_formula_from_prompt(prompt: str) -> str:
+    system_prompt = (
+        "You are an expert in Excel and Google Sheets formulas. "
+        "Convert user queries into working Excel/Sheets formulas."
     )
-    return response['choices'][0]['message']['content'].strip()
 
-async def explain_formula(formula: str) -> str:
     response = openai.ChatCompletion.create(
         model="gpt-4",
-        messages=[{"role": "user", "content": f"Explain this Excel formula: {formula}"}],
-        temperature=0.2
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.2,
     )
-    return response['choices'][0]['message']['content'].strip()
- 
+
+    formula = response["choices"][0]["message"]["content"].strip()
+    return formula

@@ -1,8 +1,9 @@
+# main.py
 from fastapi import FastAPI
-from routes import auth, formula, paypal
+from routes import auth, formula
 
-app = FastAPI()
+app = FastAPI(title="SheetFormula.ai Backend")
 
-app.include_router(auth.router, prefix="/auth")
-app.include_router(formula.router, prefix="/formula")
-app.include_router(paypal.router, prefix="/paypal")
+app.include_router(auth.router, prefix="/auth", tags=["Auth"])
+app.include_router(formula.router, prefix="/formula", tags=["Formula"])
+

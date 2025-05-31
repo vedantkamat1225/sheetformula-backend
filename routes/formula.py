@@ -1,27 +1,16 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
-from services.openai_service import generate_formula, explain_formula
-from services.pocketbase_client import verify_token, increment_usage
+from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel
+from services.openai_service import generate_formula_from_prompt
 
 router = APIRouter()
 
-async def get_user(request: Request):
-    token = request.headers.get("Authorization")
-    if not token:
-        raise HTTPException(status_code=401)
-    user = await verify_token(token)
-    if not user:
-        raise HTTPException(status_code=403)
-    return user
+class FormulaRequest(BaseModel):
+    prompt: str
 
 @router.post("/generate")
-async def generate(data: dict, request: Request, user=Depends(get_user)):
-    await increment_usage(user['record']['id'])
-    result = await generate_formula(data['prompt'])
-    return {"formula": result}
-
-@router.post("/explain")
-async def explain(data: dict, request: Request, user=Depends(get_user)):
-    await increment_usage(user['record']['id'])
-    result = await explain_formula(data['formula'])
-    return {"explanation": result}
- 
+async def generate_formula(req: FormulaRequest):
+    try:
+        formula = generate_formula_from_prompt(req.prompt)
+        return {"formula": formula}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
