@@ -3,16 +3,31 @@ import httpx
 
 router = APIRouter()
 
-@router.post("/login")
-async def login(data: dict):
-    email = data.get("email")
-    password = data.get("password")
+@router.post("/signup")
+def signup(user: SignupRequest):
+    result = supabase.auth.sign_up(
+        {
+            "email": user.email,
+            "password": user.password
+        }
+    )
+    if result.get("error"):
+        raise HTTPException(status_code=400, detail=result["error"]["message"])
+    return {"message": "Signup successful", "data": result["user"]}
 
-    async with httpx.AsyncClient() as client:
-        res = await client.post(f"{BASE_URL}/collections/users/auth-with-password", json={
-            "identity": email,
-            "password": password
-        })
-        if res.status_code != 200:
-            raise HTTPException(status_code=401, detail="Invalid credentials")
-        return res.json()
+
+@router.post("/login")
+def login(user: LoginRequest):
+    result = supabase.auth.sign_in_with_password(
+        {
+            "email": user.email,
+            "password": user.password
+        }
+    )
+    if result.get("error"):
+        raise HTTPException(status_code=400, detail=result["error"]["message"])
+    return {
+        "access_token": result["session"]["access_token"],
+        "user": result["user"]
+    }
+

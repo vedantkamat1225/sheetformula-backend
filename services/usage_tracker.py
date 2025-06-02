@@ -1,7 +1,29 @@
-async def increment_usage(user_id: str):
-    async with httpx.AsyncClient() as client:
-        await client.patch(
-            f"{BASE_URL}/collections/users/records/{user_id}",
-            json={"usage_today": {"+": 1}}
-        )
- 
+from datetime import date
+from services.supabase_client import supabase
+
+async def increment_usage(user_id: str, action: str = "generate"):
+    today = str(date.today())
+    
+    # Check if today's record exists
+    res = supabase.table("api_usage")\
+        .select("*")\
+        .eq("user_id", user_id)\
+        .eq("date", today)\
+        .execute()
+
+    if res.data and len(res.data) > 0:
+        row = res.data[0]
+        field = "formula_generated" if action == "generate" else "formula_explained"
+        updated_value = row[field] + 1
+
+        supabase.table("api_usage")\
+            .update({field: updated_value})\
+            .eq("id", row["id"])\
+            .execute()
+    else:
+        supabase.table("api_usage").insert({
+            "user_id": user_id,
+            "formula_generated": 1 if action == "generate" else 0,
+            "formula_explained": 1 if action == "explain" else 0,
+            "date": today
+        }).execute()
