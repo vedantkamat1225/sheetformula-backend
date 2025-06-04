@@ -8,3 +8,4 @@ bcrypt
 email-validator
 pydantic[email]
 passlib[bcrypt]
+openai
