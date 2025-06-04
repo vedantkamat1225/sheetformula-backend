@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import auth, formula
+from routes import auth, formula, payments
 from routes import paypal
 
 app = FastAPI(title="SheetFormula.ai Backend")
