@@ -22,3 +22,11 @@ app.include_router(paypal.router, prefix="/paypal", tags=["PayPal"])
 @app.get("/")
 def read_root():
     return {"message": "SheetFormula API is live"}
+
+@app.get("/", include_in_schema=False)
+def root():
+    return {"message": "SheetFormula API is live"}
+
+@app.get("/health", include_in_schema=False)
+def health():
+    return {"status": "ok"}
