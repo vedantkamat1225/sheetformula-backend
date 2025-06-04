@@ -1,29 +1,44 @@
-from services.usage_tracker import increment_usage
-from services.openai_service import generate_formula, explain_formula
+# routes/formula.py
 from fastapi import APIRouter, Request
-from utils.auth import get_user
+from models.formula import FormulaRequest, ExplainRequest
+from services.openai_service import generate_formula, explain_formula
+from utils.auth_utils import get_current_user
+from utils.supabase_client import supabase
+from datetime import date
 
 router = APIRouter()
 
-@router.post("/formula/generate")
-async def generate_formula_endpoint(request: Request):
-    data = await request.json()
-    prompt = data.get("prompt")
+@router.post("/generate")
+async def generate(req: Request, body: FormulaRequest):
+    user = await get_current_user(req)
+    user_id = user["sub"]
 
-    user = await get_user(request)
+    # track usage
+    today = date.today()
+    res = supabase.table("api_usage").select("*").eq("user_id", user_id).eq("date", today).execute()
+    if res.data:
+        row = res.data[0]
+        supabase.table("api_usage").update({"formula_generated": row["formula_generated"] + 1}).eq("id", row["id"]).execute()
+    else:
+        supabase.table("api_usage").insert({"user_id": user_id, "formula_generated": 1, "formula_explained": 0}).execute()
 
-    await increment_usage(user['record']['id'], action="generate")
-    formula = await generate_formula(prompt)
+    formula = await generate_formula(body.prompt)
     return {"formula": formula}
 
 
-@router.post("/formula/explain")
-async def explain_formula_endpoint(request: Request):
-    data = await request.json()
-    formula = data.get("formula")
+@router.post("/explain")
+async def explain(req: Request, body: ExplainRequest):
+    user = await get_current_user(req)
+    user_id = user["sub"]
 
-    user = await get_user(request)
+    # track usage
+    today = date.today()
+    res = supabase.table("api_usage").select("*").eq("user_id", user_id).eq("date", today).execute()
+    if res.data:
+        row = res.data[0]
+        supabase.table("api_usage").update({"formula_explained": row["formula_explained"] + 1}).eq("id", row["id"]).execute()
+    else:
+        supabase.table("api_usage").insert({"user_id": user_id, "formula_generated": 0, "formula_explained": 1}).execute()
 
-    await increment_usage(user['record']['id'], action="explain")
-    explanation = await explain_formula(formula)
+    explanation = await explain_formula(body.formula)
     return {"explanation": explanation}
