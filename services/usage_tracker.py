@@ -1,5 +1,5 @@
 from datetime import date
-from services.supabase_client import supabase
+from utils.supabase import supabase
 
 async def increment_usage(user_id: str, action: str = "generate"):
     today = str(date.today())

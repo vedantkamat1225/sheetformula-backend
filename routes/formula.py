@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request
 from models.formula import FormulaRequest, ExplainRequest
 from services.openai_service import generate_formula, explain_formula
 from utils.auth_utils import get_current_user
-from utils.supabase_client import supabase
+from utils.supabase import supabase
 from datetime import date
 
 router = APIRouter()

@@ -18,3 +18,7 @@ app.include_router(formula.router, prefix="/formula", tags=["Formula"])
 app.include_router(payments.router, prefix="/payments", tags=["Payments"])
 
 app.include_router(paypal.router, prefix="/paypal", tags=["PayPal"])
+
+@app.get("/")
+def read_root():
+    return {"message": "SheetFormula API is live"}

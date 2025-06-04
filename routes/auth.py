@@ -1,7 +1,7 @@
 # routes/auth.py
 from fastapi import APIRouter, HTTPException, Request
 from models.user import UserCreate, UserLogin
-from utils.supabase_client import supabase
+from utils.supabase import supabase
 from services.hash import hash_password, verify_password
 from services.jwt import create_access_token
 
